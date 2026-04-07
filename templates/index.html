@@ -81,4 +81,11 @@ carregar()
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js')
 }
-</script>
+</script><div class="grid grid-cols-2 gap-2 mt-4 text-center">
+    <div class="bg-green-200 p-2 rounded">
+        💰 Lucro<br><span id="lucro">0</span>
+    </div>
+    <div class="bg-blue-200 p-2 rounded">
+        📦 Total<br><span id="total">0</span>
+    </div>
+</div>
