@@ -77,7 +77,7 @@ function atualizarGrafico(dados) {
         data: {
             labels: Object.keys(meses),
             datasets: [{
-                label: "Ganhos (R$)",
+                label: "💰 Ganhos Mensais",
                 data: Object.values(meses)
             }]
         }
@@ -86,7 +86,7 @@ function atualizarGrafico(dados) {
 
 carregar()
 
-// PWA
+// PWA (isso SIM fica aqui)
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js')
 }
