@@ -84,7 +84,30 @@ function atualizarGrafico(dados) {
     })
 }
 
-carregar()
+carregar()async function carregar() {
+    let res = await fetch("/brinquedos")
+    let dados = await res.json()
+
+    // 🔔 ALERTA DE ATRASO (AQUI)
+    let hoje = new Date()
+
+    dados.forEach(b => {
+        if (b.retirada) {
+            let dataRetirada = new Date(b.retirada)
+
+            if (dataRetirada < hoje && b.status !== "concluído") {
+                alert(`⚠️ ATRASADO: ${b.nome} - Cliente: ${b.cliente}`)
+            }
+        }
+    })
+
+    let lista = document.getElementById("lista")
+    lista.innerHTML = ""
+
+    dados.forEach(b => {
+        ...
+    })
+}
 
 // PWA (isso SIM fica aqui)
 if ('serviceWorker' in navigator) {
