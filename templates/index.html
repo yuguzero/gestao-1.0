@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão AeG</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="/manifest.json">
 </head>
 <body class="bg-slate-50 text-slate-800">
 
 <div class="min-h-screen">
     <div class="max-w-6xl mx-auto p-4 md:p-6">
 
+        <!-- HEADER -->
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
             <div>
                 <h1 class="text-3xl font-bold">Controle de Locações</h1>
@@ -27,6 +29,7 @@
             </div>
         </div>
 
+        <!-- CARDS -->
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
             <div class="bg-white rounded-2xl shadow p-4">
                 <p class="text-sm text-slate-500">Total de Locações</p>
@@ -50,28 +53,35 @@
 
             <div class="bg-white rounded-2xl shadow p-4">
                 <p class="text-sm text-slate-500">Receita Total</p>
-                <h2 id="receita" class="text-3xl font-bold mt-2 text-emerald-600">R$ 0</h2>
+                <h2 id="receita" class="text-3xl font-bold mt-2 text-emerald-600">R$ 0,00</h2>
             </div>
         </div>
 
+        <!-- BUSCA + FILTROS -->
         <div class="bg-white rounded-2xl shadow p-4 mb-6">
-            <input
-                id="busca"
-                placeholder="Buscar por nome ou cliente..."
-                class="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                oninput="carregar()"
-            >
+            <div class="relative">
+                <span class="absolute left-3 top-3 text-slate-400">🔎</span>
+                <input
+                    id="busca"
+                    placeholder="Buscar por nome ou cliente..."
+                    class="w-full border border-slate-200 rounded-xl pl-10 pr-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    oninput="carregar()"
+                >
+            </div>
 
-            <div class="flex flex-wrap gap-2 mt-4">
-                <button onclick="setFiltro('todos')" class="px-3 py-2 rounded-xl bg-slate-900 text-white">Todos</button>
-                <button onclick="setFiltro('disponível')" class="px-3 py-2 rounded-xl bg-slate-100">Disponível</button>
-                <button onclick="setFiltro('locado')" class="px-3 py-2 rounded-xl bg-slate-100">Locado</button>
-                <button onclick="setFiltro('retirada')" class="px-3 py-2 rounded-xl bg-slate-100">Retirada</button>
-                <button onclick="setFiltro('atrasado')" class="px-3 py-2 rounded-xl bg-slate-100">Atrasado</button>
-                <button onclick="setFiltro('concluído')" class="px-3 py-2 rounded-xl bg-slate-100">Concluído</button>
+            <div class="flex flex-wrap items-center gap-2 mt-4">
+                <span class="text-slate-500">⚲ Status:</span>
+
+                <button onclick="setFiltro('todos')" class="px-3 py-2 rounded-xl bg-blue-600 text-white">Todos</button>
+                <button onclick="setFiltro('disponível')" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200">Disponível</button>
+                <button onclick="setFiltro('locado')" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200">Locado</button>
+                <button onclick="setFiltro('retirada')" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200">Retirada</button>
+                <button onclick="setFiltro('atrasado')" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200">Atrasado</button>
+                <button onclick="setFiltro('concluído')" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200">Concluído</button>
             </div>
         </div>
 
+        <!-- LISTA -->
         <div id="lista" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
 </div>
@@ -82,15 +92,6 @@ let filtroAtual = "todos";
 function setFiltro(filtro) {
     filtroAtual = filtro;
     carregar();
-}
-
-function badgeClasse(status) {
-    if (status === "concluído") return "bg-emerald-100 text-emerald-700";
-    if (status === "locado") return "bg-blue-100 text-blue-700";
-    if (status === "disponível") return "bg-slate-100 text-slate-700";
-    if (status === "retirada") return "bg-amber-100 text-amber-700";
-    if (status === "atrasado") return "bg-red-100 text-red-700";
-    return "bg-slate-100 text-slate-700";
 }
 
 async function carregar() {
@@ -116,8 +117,8 @@ async function carregar() {
 
         let statusVisual = b.status || "disponível";
 
-        const temBusca = nome.includes(busca) || cliente.includes(busca);
-        if (!temBusca) return;
+        const bateBusca = nome.includes(busca) || cliente.includes(busca);
+        if (!bateBusca) return;
 
         let itemAtrasado = false;
         if (b.retirada) {
@@ -143,19 +144,36 @@ async function carregar() {
             <div class="bg-white rounded-2xl shadow p-5 border ${borda}">
                 <div class="flex items-start justify-between gap-3">
                     <div>
-                        <h3 class="text-xl font-semibold">${b.nome || "Sem nome"}</h3>
-                        <p class="text-slate-500 mt-1">${b.cliente || "Sem cliente"}</p>
+                        <h3 class="text-2xl font-semibold">${b.nome || "Sem nome"}</h3>
+                        <p class="text-slate-500 mt-1">${b.status || "disponível"}</p>
                     </div>
-                    <span class="text-sm px-3 py-1 rounded-full ${badgeClasse(statusVisual)}">
-                        ${statusVisual}
-                    </span>
+
+                    <div class="flex gap-3 text-slate-500 text-lg">
+                        <button onclick="editarItem(${b.id})" class="hover:text-blue-600" title="Editar">✏️</button>
+                        <button onclick="deletarItem(${b.id})" class="hover:text-red-600" title="Excluir">🗑️</button>
+                    </div>
                 </div>
 
-                <div class="mt-4 space-y-1 text-sm text-slate-600">
-                    <p>💰 Valor: R$ ${valor}</p>
-                    <p>📞 Telefone: ${b.telefone || "—"}</p>
-                    <p>📅 Entrega: ${b.entrega || "—"}</p>
-                    <p>📦 Retirada: ${b.retirada || "—"}</p>
+                <div class="mt-4 space-y-3 text-[15px] text-slate-700">
+                    <p class="flex items-center gap-2">
+                        <span>👤</span>
+                        <span>${b.cliente || "Sem cliente"}</span>
+                    </p>
+
+                    <p class="flex items-center gap-2">
+                        <span>📞</span>
+                        <span>${b.telefone || "—"}</span>
+                    </p>
+
+                    <p class="flex items-center gap-2">
+                        <span>📅</span>
+                        <span>${b.entrega || "—"} - ${b.retirada || "—"}</span>
+                    </p>
+
+                    <p class="flex items-center gap-2 font-semibold text-slate-900">
+                        <span>💲</span>
+                        <span>R$ ${valor.toFixed(2)}</span>
+                    </p>
                 </div>
 
                 <div class="flex flex-wrap gap-2 mt-4">
@@ -171,9 +189,6 @@ async function carregar() {
                     <button onclick="mudarStatus(${b.id}, 'concluído')" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white">
                         Concluir
                     </button>
-                    <button onclick="deletarItem(${b.id})" class="px-3 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white">
-                        Excluir
-                    </button>
                 </div>
             </div>
         `;
@@ -183,7 +198,7 @@ async function carregar() {
     document.getElementById("ativos").innerText = ativos;
     document.getElementById("disponivel").innerText = disponivel;
     document.getElementById("atrasados").innerText = atrasados;
-    document.getElementById("receita").innerText = `R$ ${receita}`;
+    document.getElementById("receita").innerText = `R$ ${receita.toFixed(2)}`;
 }
 
 async function mudarStatus(id, status) {
@@ -202,6 +217,10 @@ async function deletarItem(id) {
         body: JSON.stringify({ id })
     });
     carregar();
+}
+
+function editarItem(id) {
+    alert("A edição eu monto pra você no próximo passo 😎");
 }
 
 async function abrirModal() {
