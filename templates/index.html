@@ -1,61 +1,33 @@
 <!DOCTYPE html>
-<html><script>
-let graficoChart = null;
+<html>
+<head>
+    <title>Gestão AeG</title>
 
-async function atualizarGrafico() {
-    let res = await fetch("/brinquedos")
-    let dados = await res.json()
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-    let meses = {}
+    <link rel="manifest" href="/manifest.json">
+</head>
 
-    dados.forEach(i => {
-        if (i.status === "concluído" && i.retirada) {
-            let d = new Date(i.retirada)
-            let mes = (d.getMonth()+1) + "/" + d.getFullYear()
+<body class="p-4 max-w-xl mx-auto">
 
-            if (!meses[mes]) meses[mes] = 0
-            meses[mes] += Number(i.valor || 0)
-        }
-    })
+<h1 class="text-2xl font-bold text-center">🎪 Controle de Locações</h1>
 
-    let labels = Object.keys(meses)
-    let valores = Object.values(meses)
+<h2 class="mt-4 font-bold">📊 Ganhos por mês</h2>
+<canvas id="grafico" style="max-height: 250px;"></canvas>
 
-    if (graficoChart) {
-        graficoChart.destroy()
-    }
+<input id="nome" placeholder="Nome do brinquedo" class="border p-2 w-full mt-4">
+<input id="preco" type="number" placeholder="Preço" class="border p-2 w-full mt-2">
 
-    graficoChart = new Chart(document.getElementById("grafico"), {
-        type: "bar",
-        data: {
-            labels: labels,
-            datasets: [{
-                label: "Ganhos (R$)",
-                data: valores
-            }]
-        },
-        options: {
-            responsive: true
-        }
-    })
-}
-</script>
-<head><script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <title>Gestao AeG</title>
-</head><link rel="manifest" href="/manifest.json"><script src="https://cdn.tailwindcss.com"></script>
-<body><h2>📊 Ganhos por mês</h2>
-<canvas id="grafico" style="max-height: 250px;"></canvas><h2>📊 Ganhos por mês</h2>
-<canvas id="grafico"></canvas>
+<button onclick="adicionar()" class="bg-blue-500 text-white p-2 w-full mt-2">
+➕ Adicionar
+</button>
 
-    <h1>Inventário de Brinquedos 🎠</h1>
-
-    <input type="text" id="nome" placeholder="Nome do brinquedo">
-    <input type="number" id="preco" placeholder="Preço">
-    <button onclick="adicionar()">Adicionar</button>
-
-    <ul id="lista"></ul>
+<ul id="lista" class="mt-4"></ul>
 
 <script>
+let graficoChart = null;
+
 async function carregar() {
     let res = await fetch("/brinquedos")
     let dados = await res.json()
@@ -66,6 +38,8 @@ async function carregar() {
     dados.forEach(b => {
         lista.innerHTML += `<li>${b.nome} - R$${b.preco}</li>`
     })
+
+    atualizarGrafico(dados)
 }
 
 async function adicionar() {
@@ -81,23 +55,7 @@ async function adicionar() {
     carregar()
 }
 
-carregar()
-</script><script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-}
-</script>
-
-</body><!-- gráfico -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<canvas id="grafico"></canvas>
-
-<script>
-async function grafico() {
-    let res = await fetch("/brinquedos")
-    let dados = await res.json()
-
+function atualizarGrafico(dados) {
     let meses = {}
 
     dados.forEach(i => {
@@ -110,18 +68,29 @@ async function grafico() {
         }
     })
 
-    new Chart(document.getElementById("grafico"), {
+    if (graficoChart) {
+        graficoChart.destroy()
+    }
+
+    graficoChart = new Chart(document.getElementById("grafico"), {
         type: "bar",
         data: {
             labels: Object.keys(meses),
             datasets: [{
-                label: "Ganhos",
+                label: "Ganhos (R$)",
                 data: Object.values(meses)
             }]
         }
     })
 }
 
-grafico()
+carregar()
+
+// PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+}
 </script>
+
+</body>
 </html>
