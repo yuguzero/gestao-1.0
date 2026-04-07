@@ -1,5 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html><script>
+let graficoChart = null;
+
+async function atualizarGrafico() {
+    let res = await fetch("/brinquedos")
+    let dados = await res.json()
+
+    let meses = {}
+
+    dados.forEach(i => {
+        if (i.status === "concluído" && i.retirada) {
+            let d = new Date(i.retirada)
+            let mes = (d.getMonth()+1) + "/" + d.getFullYear()
+
+            if (!meses[mes]) meses[mes] = 0
+            meses[mes] += Number(i.valor || 0)
+        }
+    })
+
+    let labels = Object.keys(meses)
+    let valores = Object.values(meses)
+
+    if (graficoChart) {
+        graficoChart.destroy()
+    }
+
+    graficoChart = new Chart(document.getElementById("grafico"), {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Ganhos (R$)",
+                data: valores
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    })
+}
+</script>
 <head><script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Gestao AeG</title>
 </head><link rel="manifest" href="/manifest.json"><script src="https://cdn.tailwindcss.com"></script>
