@@ -1,30 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Gestão AeG</title>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <link rel="manifest" href="/manifest.json">
-</head>
-
-<body class="p-4 max-w-xl mx-auto">
-
-<h1 class="text-2xl font-bold text-center">🎪 Controle de Locações</h1>
-
-<h2 class="mt-4 font-bold">📊 Ganhos por mês</h2>
-<canvas id="grafico" style="max-height: 250px;"></canvas>
-
-<input id="nome" placeholder="Nome do brinquedo" class="border p-2 w-full mt-4">
-<input id="preco" type="number" placeholder="Preço" class="border p-2 w-full mt-2">
-
-<button onclick="adicionar()" class="bg-blue-500 text-white p-2 w-full mt-2">
-➕ Adicionar
-</button>
-
-<ul id="lista" class="mt-4"></ul>
-
 <script>
 let graficoChart = null;
 
@@ -32,11 +5,24 @@ async function carregar() {
     let res = await fetch("/brinquedos")
     let dados = await res.json()
 
+    // 🔔 ALERTA DE ATRASO
+    let hoje = new Date()
+
+    dados.forEach(b => {
+        if (b.retirada) {
+            let dataRetirada = new Date(b.retirada)
+
+            if (dataRetirada < hoje && b.status !== "concluído") {
+                alert(`⚠️ ATRASADO: ${b.nome}`)
+            }
+        }
+    })
+
     let lista = document.getElementById("lista")
     lista.innerHTML = ""
 
     dados.forEach(b => {
-        lista.innerHTML += `<li>${b.nome} - R$${b.preco}</li>`
+        lista.innerHTML += `<li>${b.nome} - R$${b.valor || b.preco}</li>`
     })
 
     atualizarGrafico(dados)
@@ -49,7 +35,11 @@ async function adicionar() {
     await fetch("/brinquedos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, preco })
+        body: JSON.stringify({
+            nome,
+            valor: preco,
+            status: "disponível"
+        })
     })
 
     carregar()
@@ -84,36 +74,11 @@ function atualizarGrafico(dados) {
     })
 }
 
-carregar()async function carregar() {
-    let res = await fetch("/brinquedos")
-    let dados = await res.json()
+// 🚀 inicia
+carregar()
 
-    // 🔔 ALERTA DE ATRASO (AQUI)
-    let hoje = new Date()
-
-    dados.forEach(b => {
-        if (b.retirada) {
-            let dataRetirada = new Date(b.retirada)
-
-            if (dataRetirada < hoje && b.status !== "concluído") {
-                alert(`⚠️ ATRASADO: ${b.nome} - Cliente: ${b.cliente}`)
-            }
-        }
-    })
-
-    let lista = document.getElementById("lista")
-    lista.innerHTML = ""
-
-    dados.forEach(b => {
-        ...
-    })
-}
-
-// PWA (isso SIM fica aqui)
+// 📱 PWA
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js')
 }
 </script>
-
-</body>
-</html>
