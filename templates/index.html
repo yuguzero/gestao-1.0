@@ -1,3 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestão AeG</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="manifest" href="/manifest.json">
+</head>
+
+<body class="p-4 max-w-xl mx-auto">
+
+<h1 class="text-2xl font-bold text-center">🎪 Controle de Locações</h1>
+
+<!-- 📊 CARDS -->
+<div class="grid grid-cols-2 gap-2 mt-4 text-center">
+    <div class="bg-green-200 p-2 rounded">
+        💰 Lucro<br><span id="lucro">0</span>
+    </div>
+    <div class="bg-blue-200 p-2 rounded">
+        📦 Total<br><span id="total">0</span>
+    </div>
+</div>
+
+<!-- 📊 GRÁFICO -->
+<h2 class="mt-4 font-bold">📊 Ganhos por mês</h2>
+<canvas id="grafico" style="max-height: 250px;"></canvas>
+
+<!-- INPUTS -->
+<input id="nome" placeholder="Nome do brinquedo" class="border p-2 w-full mt-4">
+<input id="preco" type="number" placeholder="Preço" class="border p-2 w-full mt-2">
+
+<!-- 🔎 BUSCA (AQUI que você pediu) -->
+<input id="busca" placeholder="🔍 Buscar cliente ou brinquedo" 
+class="border p-2 w-full mt-2" oninput="carregar()">
+
+<button onclick="adicionar()" class="bg-blue-500 text-white p-2 w-full mt-2">
+➕ Adicionar
+</button>
+
+<ul id="lista" class="mt-4"></ul>
+
 <script>
 let graficoChart = null;
 
@@ -5,25 +48,48 @@ async function carregar() {
     let res = await fetch("/brinquedos")
     let dados = await res.json()
 
-    // 🔔 ALERTA DE ATRASO
-    let hoje = new Date()
-
-    dados.forEach(b => {
-        if (b.retirada) {
-            let dataRetirada = new Date(b.retirada)
-
-            if (dataRetirada < hoje && b.status !== "concluído") {
-                alert(`⚠️ ATRASADO: ${b.nome}`)
-            }
-        }
-    })
+    let busca = document.getElementById("busca").value.toLowerCase()
 
     let lista = document.getElementById("lista")
     lista.innerHTML = ""
 
+    let total = 0
+    let lucro = 0
+    let hoje = new Date()
+
     dados.forEach(b => {
-        lista.innerHTML += `<li>${b.nome} - R$${b.valor || b.preco}</li>`
+
+        if (
+            (b.nome || "").toLowerCase().includes(busca)
+        ) {
+
+            total++
+
+            if (b.status === "concluído") {
+                lucro += Number(b.valor || 0)
+            }
+
+            let atrasado = false
+            if (b.retirada) {
+                let data = new Date(b.retirada)
+                if (data < hoje && b.status !== "concluído") {
+                    atrasado = true
+                }
+            }
+
+            let cor = atrasado ? "bg-red-200" : "bg-gray-100"
+
+            lista.innerHTML += `
+            <div class="${cor} p-3 mt-2 rounded shadow">
+                <b>${b.nome}</b><br>
+                💰 R$${b.valor || 0}<br>
+                Status: ${b.status || "disponível"}
+            </div>`
+        }
     })
+
+    document.getElementById("total").innerText = total
+    document.getElementById("lucro").innerText = lucro
 
     atualizarGrafico(dados)
 }
@@ -81,11 +147,7 @@ carregar()
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js')
 }
-</script><div class="grid grid-cols-2 gap-2 mt-4 text-center">
-    <div class="bg-green-200 p-2 rounded">
-        💰 Lucro<br><span id="lucro">0</span>
-    </div>
-    <div class="bg-blue-200 p-2 rounded">
-        📦 Total<br><span id="total">0</span>
-    </div>
-</div>
+</script>
+
+</body>
+</html>
