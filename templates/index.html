@@ -1,179 +1,237 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão AeG</title>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <link rel="manifest" href="/manifest.json">
 </head>
+<body class="bg-slate-50 text-slate-800">
 
-<body class="bg-gray-100 p-4">
+<div class="min-h-screen">
+    <div class="max-w-6xl mx-auto p-4 md:p-6">
 
-<div class="max-w-4xl mx-auto">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+            <div>
+                <h1 class="text-3xl font-bold">Controle de Locações</h1>
+                <p class="text-slate-500">Controle completo das suas locações em tempo real</p>
+            </div>
 
-    <!-- HEADER -->
-    <div class="flex justify-between items-center mb-4">
-        <div>
-            <h1 class="text-2xl font-bold">🎪 Controle de Locações</h1>
-            <p class="text-gray-500 text-sm">Controle completo em tempo real</p>
+            <div class="flex gap-2">
+                <button onclick="abrirModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl shadow">
+                    + Nova Locação
+                </button>
+                <a href="/logout" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl shadow text-center">
+                    Sair
+                </a>
+            </div>
         </div>
 
-        <a href="/logout" class="bg-red-500 text-white px-3 py-1 rounded">Sair</a>
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
+            <div class="bg-white rounded-2xl shadow p-4">
+                <p class="text-sm text-slate-500">Total de Locações</p>
+                <h2 id="total" class="text-3xl font-bold mt-2">0</h2>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow p-4">
+                <p class="text-sm text-slate-500">Locações Ativas</p>
+                <h2 id="ativos" class="text-3xl font-bold mt-2">0</h2>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow p-4">
+                <p class="text-sm text-slate-500">Itens Disponíveis</p>
+                <h2 id="disponivel" class="text-3xl font-bold mt-2">0</h2>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow p-4">
+                <p class="text-sm text-slate-500">Atrasados</p>
+                <h2 id="atrasados" class="text-3xl font-bold mt-2 text-red-500">0</h2>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow p-4">
+                <p class="text-sm text-slate-500">Receita Total</p>
+                <h2 id="receita" class="text-3xl font-bold mt-2 text-emerald-600">R$ 0</h2>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow p-4 mb-6">
+            <input
+                id="busca"
+                placeholder="Buscar por nome ou cliente..."
+                class="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                oninput="carregar()"
+            >
+
+            <div class="flex flex-wrap gap-2 mt-4">
+                <button onclick="setFiltro('todos')" class="px-3 py-2 rounded-xl bg-slate-900 text-white">Todos</button>
+                <button onclick="setFiltro('disponível')" class="px-3 py-2 rounded-xl bg-slate-100">Disponível</button>
+                <button onclick="setFiltro('locado')" class="px-3 py-2 rounded-xl bg-slate-100">Locado</button>
+                <button onclick="setFiltro('retirada')" class="px-3 py-2 rounded-xl bg-slate-100">Retirada</button>
+                <button onclick="setFiltro('atrasado')" class="px-3 py-2 rounded-xl bg-slate-100">Atrasado</button>
+                <button onclick="setFiltro('concluído')" class="px-3 py-2 rounded-xl bg-slate-100">Concluído</button>
+            </div>
+        </div>
+
+        <div id="lista" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
-
-    <!-- BOTÃO -->
-    <button onclick="abrirModal()" class="bg-blue-600 text-white px-4 py-2 rounded mb-4">
-        + Nova Locação
-    </button>
-
-    <!-- CARDS -->
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 text-center">
-
-        <div class="bg-white p-3 rounded shadow">
-            <p class="text-gray-500 text-sm">Total</p>
-            <h2 id="total" class="text-xl font-bold">0</h2>
-        </div>
-
-        <div class="bg-white p-3 rounded shadow">
-            <p class="text-gray-500 text-sm">Ativos</p>
-            <h2 id="ativos" class="text-xl font-bold">0</h2>
-        </div>
-
-        <div class="bg-white p-3 rounded shadow">
-            <p class="text-gray-500 text-sm">Atrasados</p>
-            <h2 id="atrasados" class="text-xl font-bold text-red-500">0</h2>
-        </div>
-
-        <div class="bg-white p-3 rounded shadow">
-            <p class="text-gray-500 text-sm">Receita</p>
-            <h2 id="lucro" class="text-xl font-bold text-green-600">0</h2>
-        </div>
-
-        <div class="bg-white p-3 rounded shadow">
-            <p class="text-gray-500 text-sm">Disponível</p>
-            <h2 id="disponivel" class="text-xl font-bold">0</h2>
-        </div>
-
-    </div>
-
-    <!-- BUSCA -->
-    <input id="busca" placeholder="🔍 Buscar..." 
-    class="border p-2 w-full mb-3 rounded" oninput="carregar()">
-
-    <!-- LISTA -->
-    <div id="lista"></div>
-
 </div>
 
 <script>
+let filtroAtual = "todos";
+
+function setFiltro(filtro) {
+    filtroAtual = filtro;
+    carregar();
+}
+
+function badgeClasse(status) {
+    if (status === "concluído") return "bg-emerald-100 text-emerald-700";
+    if (status === "locado") return "bg-blue-100 text-blue-700";
+    if (status === "disponível") return "bg-slate-100 text-slate-700";
+    if (status === "retirada") return "bg-amber-100 text-amber-700";
+    if (status === "atrasado") return "bg-red-100 text-red-700";
+    return "bg-slate-100 text-slate-700";
+}
+
 async function carregar() {
-    let res = await fetch("/brinquedos")
-    let dados = await res.json()
+    const res = await fetch("/brinquedos");
+    const dados = await res.json();
 
-    let busca = document.getElementById("busca").value.toLowerCase()
-    let lista = document.getElementById("lista")
-    lista.innerHTML = ""
+    const busca = (document.getElementById("busca")?.value || "").toLowerCase();
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
 
-    let total = 0
-    let lucro = 0
-    let ativos = 0
-    let atrasados = 0
-    let disponivel = 0
+    let total = 0;
+    let ativos = 0;
+    let disponivel = 0;
+    let atrasados = 0;
+    let receita = 0;
 
-    let hoje = new Date()
+    const hoje = new Date();
 
-    dados.forEach(b => {
+    dados.forEach((b) => {
+        const nome = (b.nome || "").toLowerCase();
+        const cliente = (b.cliente || "").toLowerCase();
+        const valor = Number(b.valor || 0);
 
-        if (
-            (b.nome || "").toLowerCase().includes(busca) ||
-            (b.cliente || "").toLowerCase().includes(busca)
-        ) {
+        let statusVisual = b.status || "disponível";
 
-            total++
+        const temBusca = nome.includes(busca) || cliente.includes(busca);
+        if (!temBusca) return;
 
-            if (b.status === "concluído") lucro += Number(b.valor || 0)
-            if (b.status === "locado") ativos++
-            if (b.status === "disponível") disponivel++
-
-            let atrasado = false
-            if (b.retirada) {
-                let data = new Date(b.retirada)
-                if (data < hoje && b.status !== "concluído") {
-                    atrasado = true
-                    atrasados++
-                }
+        let itemAtrasado = false;
+        if (b.retirada) {
+            const dataRetirada = new Date(b.retirada);
+            if (dataRetirada < hoje && statusVisual !== "concluído") {
+                itemAtrasado = true;
+                statusVisual = "atrasado";
             }
-
-            let cor = atrasado ? "border-red-400" : "border-gray-200"
-
-            lista.innerHTML += `
-            <div class="bg-white p-3 rounded shadow mb-2 border ${cor}">
-                <div class="flex justify-between">
-                    <b>${b.nome}</b>
-                    <span class="text-sm">${b.status}</span>
-                </div>
-
-                <p class="text-sm text-gray-600">👤 ${b.cliente || "—"}</p>
-                <p class="text-sm text-gray-600">💰 R$${b.valor || 0}</p>
-
-                <div class="flex gap-2 mt-2">
-                    <button onclick="mudarStatus(${b.id}, 'locado')" class="bg-blue-500 text-white px-2 rounded">📦</button>
-                    <button onclick="mudarStatus(${b.id}, 'concluído')" class="bg-green-500 text-white px-2 rounded">✔</button>
-                    <button onclick="deletar(${b.id})" class="bg-red-500 text-white px-2 rounded">🗑️</button>
-                </div>
-            </div>`
         }
-    })
 
-    document.getElementById("total").innerText = total
-    document.getElementById("lucro").innerText = "R$ " + lucro
-    document.getElementById("ativos").innerText = ativos
-    document.getElementById("atrasados").innerText = atrasados
-    document.getElementById("disponivel").innerText = disponivel
+        if (filtroAtual !== "todos" && statusVisual !== filtroAtual) return;
+
+        total++;
+
+        if (statusVisual === "locado" || statusVisual === "retirada") ativos++;
+        if (statusVisual === "disponível") disponivel++;
+        if (statusVisual === "atrasado") atrasados++;
+        if (b.status === "concluído") receita += valor;
+
+        const borda = itemAtrasado ? "border-red-300" : "border-slate-200";
+
+        lista.innerHTML += `
+            <div class="bg-white rounded-2xl shadow p-5 border ${borda}">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <h3 class="text-xl font-semibold">${b.nome || "Sem nome"}</h3>
+                        <p class="text-slate-500 mt-1">${b.cliente || "Sem cliente"}</p>
+                    </div>
+                    <span class="text-sm px-3 py-1 rounded-full ${badgeClasse(statusVisual)}">
+                        ${statusVisual}
+                    </span>
+                </div>
+
+                <div class="mt-4 space-y-1 text-sm text-slate-600">
+                    <p>💰 Valor: R$ ${valor}</p>
+                    <p>📞 Telefone: ${b.telefone || "—"}</p>
+                    <p>📅 Entrega: ${b.entrega || "—"}</p>
+                    <p>📦 Retirada: ${b.retirada || "—"}</p>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <button onclick="mudarStatus(${b.id}, 'disponível')" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200">
+                        Disponível
+                    </button>
+                    <button onclick="mudarStatus(${b.id}, 'locado')" class="px-3 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white">
+                        Locado
+                    </button>
+                    <button onclick="mudarStatus(${b.id}, 'retirada')" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white">
+                        Retirada
+                    </button>
+                    <button onclick="mudarStatus(${b.id}, 'concluído')" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white">
+                        Concluir
+                    </button>
+                    <button onclick="deletarItem(${b.id})" class="px-3 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white">
+                        Excluir
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    document.getElementById("total").innerText = total;
+    document.getElementById("ativos").innerText = ativos;
+    document.getElementById("disponivel").innerText = disponivel;
+    document.getElementById("atrasados").innerText = atrasados;
+    document.getElementById("receita").innerText = `R$ ${receita}`;
 }
 
 async function mudarStatus(id, status) {
     await fetch("/status", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, status })
-    })
-    carregar()
+    });
+    carregar();
 }
 
-async function deletar(id) {
+async function deletarItem(id) {
     await fetch("/deletar", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id })
-    })
-    carregar()
+    });
+    carregar();
 }
 
 async function abrirModal() {
-    let nome = prompt("Nome do brinquedo:")
-    let cliente = prompt("Cliente:")
-    let valor = prompt("Valor:")
+    const nome = prompt("Nome do brinquedo:");
+    if (!nome) return;
 
-    if (!nome) return
+    const cliente = prompt("Cliente:") || "";
+    const telefone = prompt("Telefone:") || "";
+    const entrega = prompt("Data de entrega (AAAA-MM-DD):") || "";
+    const retirada = prompt("Data de retirada (AAAA-MM-DD):") || "";
+    const valor = prompt("Valor:") || "0";
 
     await fetch("/brinquedos", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             nome,
             cliente,
+            telefone,
+            entrega,
+            retirada,
             valor,
             status: "disponível"
         })
-    })
+    });
 
-    carregar()
+    carregar();
 }
 
-carregar()
+carregar();
 </script>
 
 </body>
