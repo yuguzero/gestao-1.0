@@ -7,7 +7,7 @@ app = Flask(__name__)
 def conectar():
     return sqlite3.connect("database.db")
 
-# 🧱 criar tabela (se não existir)
+# 🧱 criar tabela
 def criar_tabela():
     conn = conectar()
     c = conn.cursor()
@@ -76,9 +76,9 @@ def adicionar():
 
     return {"ok": True}
 
-# 🔄 status
+# 🔄 mudar status
 @app.route("/status", methods=["POST"])
-def status():
+def mudar_status():
     data = request.json
 
     conn = conectar()
