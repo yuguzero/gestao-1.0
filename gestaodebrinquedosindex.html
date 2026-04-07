@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meu App</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script src="app.js"></script>
+  </body>import { useEffect, useMemo, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+
+const STATUS = ["disponível", "locado", "retirada", "atrasado", "concluído"];
+
+export default function App() {
+  const [items, setItems] = useState(() => {
+    const saved = localStorage.getItem("locacoes");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [busca, setBusca] = useState("");
+  const [filtro, setFiltro] = useState("todos");
+
+  const [form, setForm] = useState({
+    nome: "",
+    cliente: "",
+    telefone: "",
+    entrega: "",
+    retirada: "",
+    valor: "",
+  });
+
+  useEffect(() => {
+    localStorage.setItem("locacoes", JSON.stringify(items));
+  }, [items]);
+
+  const addItem = () => {
+    if (!form.nome) return;
+    setItems([...items, { ...form, status: "disponível" }]);
+    setForm({ nome: "", cliente: "", telefone: "", entrega: "", retirada: "", valor: "" });
+  };
+
+  const updateStatus = (index, newStatus) => {
+    const updated = [...items];
+    updated[index].status = newStatus;
+    setItems(updated);
+  };
+
+  const deleteItem = (index) => {
+    setItems(items.filter((_, i) => i !== index));
+  };
+
+  // 📊 Dados do gráfico por mês
+  const chartData = useMemo(() => {
+    const meses = {};
+
+    items.forEach((i) => {
+      if (i.status === "concluído" && i.retirada) {
+        const data = new Date(i.retirada);
+        const chave = `${data.getMonth() + 1}/${data.getFullYear()}`;
+        const valor = Number(i.valor || 0);
+
+        if (!meses[chave]) meses[chave] = 0;
+        meses[chave] += valor;
+      }
+    });
+
+    return Object.entries(meses).map(([mes, valor]) => ({ mes, valor }));
+  }, [items]);
+
+  const filteredItems = items
+    .filter((i) => (filtro === "todos" ? true : i.status === filtro))
+    .filter((i) =>
+      (i.nome || "").toLowerCase().includes(busca.toLowerCase()) ||
+      (i.cliente || "").toLowerCase().includes(busca.toLowerCase())
+    );
+
+  return (
+    <div className="p-4 max-w-xl mx-auto grid gap-4">
+      <h1 className="text-2xl font-bold text-center">🎪 Controle de Locações</h1>
+
+      {/* 📊 Gráfico */}
+      <Card>
+        <CardContent className="p-4">
+          <h2 className="font-bold mb-2">📊 Ganhos por mês</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={chartData}>
+              <XAxis dataKey="mes" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="valor" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Form */}
+      <Card>
+        <CardContent className="p-4 grid gap-2">
+          <Input placeholder="Brinquedo" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
+          <Input placeholder="Cliente" value={form.cliente} onChange={(e) => setForm({ ...form, cliente: e.target.value })} />
+          <Input placeholder="Telefone" value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
+          <Input type="date" value={form.entrega} onChange={(e) => setForm({ ...form, entrega: e.target.value })} />
+          <Input type="date" value={form.retirada} onChange={(e) => setForm({ ...form, retirada: e.target.value })} />
+          <Input placeholder="Valor (R$)" value={form.valor} onChange={(e) => setForm({ ...form, valor: e.target.value })} />
+          <Button onClick={addItem}>➕ Adicionar</Button>
+        </CardContent>
+      </Card>
+
+      {/* Busca */}
+      <Input
+        placeholder="🔍 Buscar brinquedo ou cliente"
+        value={busca}
+        onChange={(e) => setBusca(e.target.value)}
+      />
+
+      {/* Filtros */}
+      <div className="flex gap-2 flex-wrap justify-center">
+        {["todos", ...STATUS].map((s) => (
+          <Button key={s} onClick={() => setFiltro(s)}>
+            {s}
+          </Button>
+        ))}
+      </div>
+
+      {/* Lista */}
+      {filteredItems.map((item, index) => (
+        <Card key={index}>
+          <CardContent className="p-4 grid gap-1">
+            <div className="font-bold text-lg">{item.nome}</div>
+            <div>👤 {item.cliente}</div>
+            <div>📞 {item.telefone}</div>
+            <div>📅 {item.entrega} → {item.retirada}</div>
+            <div>💰 R$ {item.valor}</div>
+            <div>Status: <b>{item.status}</b></div>
+
+            <div className="flex gap-2 flex-wrap mt-2">
+              {STATUS.map((s) => (
+                <Button key={s} onClick={() => updateStatus(index, s)}>
+                  {s}
+                </Button>
+              ))}
+              <Button onClick={() => deleteItem(index)}>🗑️</Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+</html>
