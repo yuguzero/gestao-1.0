@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-gray-100">
+
+    <form method="POST" action="/login" class="bg-white p-6 rounded shadow w-full max-w-xs space-y-4">
+        <h1 class="text-2xl font-bold text-center">🔐 Login</h1>
+
+        {% if erro %}
+        <div class="bg-red-100 text-red-700 p-2 rounded text-sm">
+            {{ erro }}
+        </div>
+        {% endif %}
+
+        <input name="usuario" placeholder="Usuário" class="border p-2 w-full rounded">
+        <input name="senha" type="password" placeholder="Senha" class="border p-2 w-full rounded">
+        <button class="bg-blue-500 text-white p-2 w-full rounded">Entrar</button>
+    </form>
+
+</body>
+</html>
