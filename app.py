@@ -1,20 +1,13 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for, session
+from flask import Flask, request, jsonify, render_template, send_from_directory
 import sqlite3
 
 app = Flask(__name__)
-app.secret_key = "segredo123"
-
-# 🔐 login fixo (depois dá pra evoluir)
-USUARIO = "admin"
-SENHA = "1234"
-
 
 # 🔌 conectar banco
 def conectar():
     return sqlite3.connect("database.db")
 
-
-# 🧱 criar tabela
+# 🧱 criar tabela (se não existir)
 def criar_tabela():
     conn = conectar()
     c = conn.cursor()
@@ -33,47 +26,25 @@ def criar_tabela():
     conn.commit()
     conn.close()
 
-
 criar_tabela()
 
-
-# 🔒 home protegida
 @app.route("/")
 def home():
-    if not session.get("logado"):
-        return redirect(url_for("login"))
     return render_template("index.html")
 
+# 📱 manifest
+@app.route("/manifest.json")
+def manifest():
+    return send_from_directory(".", "manifest.json")
 
-# 🔐 login
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        usuario = request.form.get("usuario")
-        senha = request.form.get("senha")
-
-        if usuario == USUARIO and senha == SENHA:
-            session["logado"] = True
-            return redirect(url_for("home"))
-
-        return render_template("login.html", erro="Usuário ou senha inválidos")
-
-    return render_template("login.html")
-
-
-# 🚪 logout
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("login"))
-
+# ⚙️ service worker
+@app.route("/sw.js")
+def sw():
+    return send_from_directory(".", "sw.js")
 
 # 📋 listar
 @app.route("/brinquedos", methods=["GET"])
 def listar():
-    if not session.get("logado"):
-        return jsonify({"erro": "não autorizado"}), 401
-
     conn = conectar()
     c = conn.cursor()
     c.execute("SELECT * FROM brinquedos")
@@ -95,13 +66,9 @@ def listar():
 
     return jsonify(resultado)
 
-
 # ➕ adicionar
 @app.route("/brinquedos", methods=["POST"])
 def adicionar():
-    if not session.get("logado"):
-        return jsonify({"erro": "não autorizado"}), 401
-
     data = request.json
 
     conn = conectar()
@@ -123,33 +90,22 @@ def adicionar():
 
     return {"ok": True}
 
-
 # 🔄 status
 @app.route("/status", methods=["POST"])
-def mudar_status():
-    if not session.get("logado"):
-        return jsonify({"erro": "não autorizado"}), 401
-
+def status():
     data = request.json
 
     conn = conectar()
     c = conn.cursor()
-    c.execute(
-        "UPDATE brinquedos SET status=? WHERE id=?",
-        (data["status"], data["id"])
-    )
+    c.execute("UPDATE brinquedos SET status=? WHERE id=?", (data["status"], data["id"]))
     conn.commit()
     conn.close()
 
     return {"ok": True}
 
-
 # 🗑️ deletar
 @app.route("/deletar", methods=["POST"])
 def deletar():
-    if not session.get("logado"):
-        return jsonify({"erro": "não autorizado"}), 401
-
     data = request.json
 
     conn = conectar()
@@ -159,7 +115,6 @@ def deletar():
     conn.close()
 
     return {"ok": True}
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
