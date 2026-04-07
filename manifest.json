@@ -1,0 +1,15 @@
+{
+  "name": "Controle de Locações",
+  "short_name": "Locações",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/861/861060.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
