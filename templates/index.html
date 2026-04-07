@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Inventário</title>
-</head>
-<body>
+    <title>Gestao AeG</title>
+</head><link rel="manifest" href="/manifest.json"><script src="https://cdn.tailwindcss.com"></script>
+<body><h2>📊 Ganhos por mês</h2>
+<canvas id="grafico"></canvas>
 
     <h1>Inventário de Brinquedos 🎠</h1>
 
@@ -40,7 +41,46 @@ async function adicionar() {
 }
 
 carregar()
+</script><script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+}
 </script>
 
-</body>
+</body><!-- gráfico -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<canvas id="grafico"></canvas>
+
+<script>
+async function grafico() {
+    let res = await fetch("/brinquedos")
+    let dados = await res.json()
+
+    let meses = {}
+
+    dados.forEach(i => {
+        if (i.status === "concluído" && i.retirada) {
+            let d = new Date(i.retirada)
+            let mes = (d.getMonth()+1) + "/" + d.getFullYear()
+
+            if (!meses[mes]) meses[mes] = 0
+            meses[mes] += Number(i.valor || 0)
+        }
+    })
+
+    new Chart(document.getElementById("grafico"), {
+        type: "bar",
+        data: {
+            labels: Object.keys(meses),
+            datasets: [{
+                label: "Ganhos",
+                data: Object.values(meses)
+            }]
+        }
+    })
+}
+
+grafico()
+</script>
 </html>
