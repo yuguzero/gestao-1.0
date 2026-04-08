@@ -1,33 +1,38 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory
-import sqlite3
+import psycopg2
+import os
 
 app = Flask(__name__)
 
-# 🔌 conectar banco
-def conectar():
-    return sqlite3.connect("database.db")
+# 🔗 conexão PostgreSQL (Render usa DATABASE_URL)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# 🧱 criar tabela (se não existir)
+def conectar():
+    return psycopg2.connect(DATABASE_URL)
+
+# 🧱 criar tabela
 def criar_tabela():
     conn = conectar()
     c = conn.cursor()
     c.execute("""
     CREATE TABLE IF NOT EXISTS brinquedos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         nome TEXT,
         cliente TEXT,
         telefone TEXT,
         entrega TEXT,
         retirada TEXT,
-        valor REAL,
+        valor NUMERIC,
         status TEXT
     )
     """)
     conn.commit()
+    c.close()
     conn.close()
 
 criar_tabela()
 
+# 🏠 home
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -47,8 +52,9 @@ def sw():
 def listar():
     conn = conectar()
     c = conn.cursor()
-    c.execute("SELECT * FROM brinquedos")
+    c.execute("SELECT id, nome, cliente, telefone, entrega, retirada, valor, status FROM brinquedos")
     dados = c.fetchall()
+    c.close()
     conn.close()
 
     resultado = []
@@ -60,7 +66,7 @@ def listar():
             "telefone": d[3],
             "entrega": d[4],
             "retirada": d[5],
-            "valor": d[6],
+            "valor": float(d[6]) if d[6] else 0,
             "status": d[7]
         })
 
@@ -75,7 +81,7 @@ def adicionar():
     c = conn.cursor()
     c.execute("""
         INSERT INTO brinquedos (nome, cliente, telefone, entrega, retirada, valor, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
     """, (
         data.get("nome"),
         data.get("cliente"),
@@ -86,6 +92,7 @@ def adicionar():
         data.get("status", "disponível")
     ))
     conn.commit()
+    c.close()
     conn.close()
 
     return {"ok": True}
@@ -97,8 +104,9 @@ def status():
 
     conn = conectar()
     c = conn.cursor()
-    c.execute("UPDATE brinquedos SET status=? WHERE id=?", (data["status"], data["id"]))
+    c.execute("UPDATE brinquedos SET status=%s WHERE id=%s", (data["status"], data["id"]))
     conn.commit()
+    c.close()
     conn.close()
 
     return {"ok": True}
@@ -110,8 +118,9 @@ def deletar():
 
     conn = conectar()
     c = conn.cursor()
-    c.execute("DELETE FROM brinquedos WHERE id=?", (data["id"],))
+    c.execute("DELETE FROM brinquedos WHERE id=%s", (data["id"],))
     conn.commit()
+    c.close()
     conn.close()
 
     return {"ok": True}
